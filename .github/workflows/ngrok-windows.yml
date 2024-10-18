@@ -12,13 +12,23 @@ jobs:
 
     - name: Install Ngrok
       run: |
-        Invoke-WebRequest -Uri https://bin.equinox.io/c/111111/ngrok-stable-windows-amd64.zip -OutFile ngrok.zip
-        Expand-Archive ngrok.zip -DestinationPath ./
-        Remove-Item ngrok.zip
+        $ngrokUrl = "https://bin.equinox.io/c/111111/ngrok-stable-windows-amd64.zip" # Old URL
+        $latestNgrokUrl = "https://bin.equinox.io/c/111111/ngrok-stable-windows-amd64.zip"
+        $ngrokDownloadPath = "$env:temp/ngrok.zip"
+
+        # Download Ngrok
+        Invoke-WebRequest -Uri $latestNgrokUrl -OutFile $ngrokDownloadPath
+
+        # Unzip the Ngrok executable
+        Expand-Archive -Path $ngrokDownloadPath -DestinationPath "$env:temp/ngrok"
+        Remove-Item $ngrokDownloadPath
+
+        # Move Ngrok to a usable location
+        Move-Item -Path "$env:temp/ngrok/ngrok.exe" -Destination "$env:ProgramFiles/ngrok" -Force
 
     - name: Start Ngrok
       run: |
-        Start-Process -NoNewWindow -FilePath .\ngrok.exe -ArgumentList "http 3389" # Expose RDP port (3389)
+        Start-Process -NoNewWindow -FilePath "$env:ProgramFiles/ngrok/ngrok.exe" -ArgumentList "tcp 3389" # Expose RDP port (3389)
 
     - name: Display Ngrok Public URL
       run: |
