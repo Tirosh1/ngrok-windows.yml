@@ -1,0 +1,26 @@
+name: Setup Windows VM with Ngrok
+
+on: [push]
+
+jobs:
+  setup-windows:
+    runs-on: windows-latest  # This runs on a Windows GitHub Actions runner
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Install Ngrok
+      run: |
+        Invoke-WebRequest -Uri https://bin.equinox.io/c/111111/ngrok-stable-windows-amd64.zip -OutFile ngrok.zip
+        Expand-Archive ngrok.zip -DestinationPath ./
+        Remove-Item ngrok.zip
+
+    - name: Start Ngrok
+      run: |
+        Start-Process -NoNewWindow -FilePath .\ngrok.exe -ArgumentList "http 3389" # Expose RDP port (3389)
+
+    - name: Display Ngrok Public URL
+      run: |
+        Start-Sleep -Seconds 10  # Wait for Ngrok to start
+        curl http://localhost:4040/api/tunnels | ConvertFrom-Json | Select-Object -ExpandProperty tunnels | Select-Object -First 1 | Select-Object -ExpandProperty public_url
